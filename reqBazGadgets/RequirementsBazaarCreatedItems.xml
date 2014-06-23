@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs 
+    title="Requirements Bazaar Wish Acitivity" 
+    author="K"
+    author_email="K@E-Mail"
+    description="Displays the wishes that people take most interest in."
+    height="500"
+    width="400"
+    >
+	<Require feature="pubsub"/> 
+	<Require feature="setprefs"/> 
+	<Require feature="dynamic-height"/> 
+	<Require feature="settitle"/> 
+</ModulePrefs> 
+<Content type="html"><![CDATA[
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/json2.js" ></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/storage.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/lasAjaxClient.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/openapp.js"></script>
+<!--<script type="text/javascript" src="http://open-app.googlecode.com/files/openapp.js"></script>-->
+<script type="text/javascript" src="https://dl.dropboxusercontent.com/u/42434834/MobSosGadgetCreator/statisticsGadget.js"></script>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    	google.load('visualization', '1', {packages: ['corechart', 'table', 'linechart', 'annotatedtimeline', 'gauge']});
+</script>
+
+<link rel="stylesheet" href="http://dbis.rwth-aachen.de/gadgets/query-visualization/CSS/statisticsGadget.css">
+
+
+<div id="headlineDiv" style="font-size:10pt;font-weight:bold;text-align: center;"></div>
+<div id="descriptionDiv" style="font-size:8pt;text-align: center;"></div>
+<div id="resultContainerDiv" >
+	<div id="resultDiv" style="height: 450;"></div>
+</div>
+
+<script type="text/javascript">
+	try {
+		function RequirementsBazaarWishAcitivityStatGadget() {
+this.getName = function() {
+	return "RequirementsBazaarWishAcitivity";
+};
+
+this.getHeadline = function() {
+	return "Requirements Bazaar Wish Acitivity";
+};
+
+this.getDescription = function() {
+	return "Displays the wishes that people take most interest in.";
+};
+
+this.getVisualizationType = function() {
+	return "BarChart";
+};
+
+this.getPreparedQuery = function() {
+	return "START n = node(0) MATCH (n)-[:WISH_OPEN | WISH_ASSIGNED | WISH_REALIZED]->(m) <-[r:VIEWER_OF_WISH | VOTER_ON]-() RETURN m.title, count(r) ORDER BY count(r) DESC LIMIT 10";
+};
+
+this.getUseDefaultLogin = function() {
+	return true;
+};
+
+this.getDefaultUser = function() {
+	return "admin";
+};
+
+this.getDefaultPassword = function() {
+	return "admin";
+};
+
+this.getDefaultDatabase = function() {
+	return "LocalNeo4j";
+};
+
+this.getDefaultServerURL = function() {
+	return "http://steen.informatik.rwth-aachen.de:9912/";
+};
+
+this.getGraphParameter = function(name) {
+ switch(name) {
+  case 'nodeScaleSource':
+ return -2147483648;
+ case 'nodeHeight':
+ return 15;
+ case 'nodeWidth':
+ return 100;
+ case 'addNodeLabels':
+ return true;
+ case 'preparedLayoutCode':
+ return 8;
+ case 'edgeWeightSource':
+ return -2147483648;
+ case 'edgeWidthSource':
+ return -2147483648;
+ case 'nodeTooltipsSource':
+ return JSON.parse('[]');
+ case 'edgeTooltipsSource': 
+ return JSON.parse('[]');
+ case 'isDirected':
+ return  false; 
+ default: return ''; }; };
+
+}
+	
+		var statGadget = new StatisticsGadget(new RequirementsBazaarWishAcitivityStatGadget());
+		statGadget.start();
+	}
+	catch(error) {
+		console.log("ERROR: Uncaught Exception occurred: " + error);
+	}
+</script>
+]]></Content>
+</Module>

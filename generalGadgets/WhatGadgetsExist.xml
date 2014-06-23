@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs 
+    title="What Widgets Exist" 
+    author="K"
+    author_email="K@E-Mail"
+    description="Pick a developer"
+    height="500"
+    width="400"
+    >
+	<Require feature="pubsub"/> 
+	<Require feature="setprefs"/> 
+	<Require feature="dynamic-height"/> 
+	<Require feature="settitle"/> 
+</ModulePrefs>
+<Content type="html"><![CDATA[
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/json2.js" ></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/storage.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/NOSE/js/lasAjaxClient.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/openapp.js"></script>
+<!--<script type="text/javascript" src="http://open-app.googlecode.com/files/openapp.js"></script>-->
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/NOSE/js/addOnRole.js"></script>
+
+
+<link rel="stylesheet" href="http://dbis.rwth-aachen.de/gadgets/query-visualization/CSS/statisticsGadget.css">
+
+<div id="descriptionDiv" style="float:left;width:50%;min-height:30px"></div>
+<div id="what_gadgets_exist">
+	
+</div>
+
+<script type="text/javascript">
+	
+</script>
+]]></Content>
+</Module>

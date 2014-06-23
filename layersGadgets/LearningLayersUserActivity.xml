@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs 
+    title="Learning Layers Media Wiki user activity" 
+    author="K"
+    author_email="K@E-Mail"
+    description="Learning Layers user activity based on edits"
+    height="500"
+    width="400"
+    >
+	<Require feature="pubsub"/> 
+	<Require feature="setprefs"/> 
+	<Require feature="dynamic-height"/> 
+	<Require feature="settitle"/> 
+</ModulePrefs> 
+<Content type="html"><![CDATA[
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/json2.js" ></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/storage.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/lasAjaxClient.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/openapp.js"></script>
+<!--<script type="text/javascript" src="http://open-app.googlecode.com/files/openapp.js"></script>-->
+<script type="text/javascript" src="https://dl.dropboxusercontent.com/u/42434834/MobSosGadgetCreator/statisticsGadget.js"></script>
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript">
+    	google.load('visualization', '1', {packages: ['corechart', 'table', 'linechart', 'annotatedtimeline', 'gauge']});
+</script>
+
+<link rel="stylesheet" href="http://dbis.rwth-aachen.de/gadgets/query-visualization/CSS/statisticsGadget.css">
+
+
+<div id="headlineDiv" style="font-size:10pt;font-weight:bold;text-align: center;"></div>
+<div id="descriptionDiv" style="font-size:8pt;text-align: center;"></div>
+<div id="resultContainerDiv" >
+	<div id="resultDiv" style="height: 450;"></div>
+</div>
+
+<script type="text/javascript">
+	try {
+		function LearningLayersuseractivityStatGadget() {
+this.getName = function() {
+	return "LearningLayersuseractivity";
+};
+
+this.getHeadline = function() {
+	return "Learning Layers user activity";
+};
+
+this.getDescription = function() {
+	return "Learning Layers user activity based on edits";
+};
+
+this.getVisualizationType = function() {
+	return "PieChart";
+};
+
+this.getPreparedQuery = function() {
+	return "SELECT CAST(user_real_name AS CHAR(255) CHARACTER SET utf8) as name, user_editcount as changes FROM layerswiki.user ORDER BY user_editcount DESC LIMIT 15;";
+};
+
+this.getUseDefaultLogin = function() {
+	return true;
+};
+
+this.getDefaultUser = function() {
+	return "admin";
+};
+
+this.getDefaultPassword = function() {
+	return "admin";
+};
+
+this.getDefaultDatabase = function() {
+	return "LayersWiki";
+};
+
+this.getDefaultServerURL = function() {
+	return "http://steen.informatik.rwth-aachen.de:9912/";
+};
+
+this.getGraphParameter = function(name) {
+ switch(name) {
+  case 'nodeScaleSource':
+ return -2147483648;
+ case 'nodeHeight':
+ return 15;
+ case 'nodeWidth':
+ return 100;
+ case 'addNodeLabels':
+ return true;
+ case 'preparedLayoutCode':
+ return 5;
+ case 'edgeWeightSource':
+ return -2147483648;
+ case 'edgeWidthSource':
+ return -2147483648;
+ case 'nodeTooltipsSource':
+ return JSON.parse('[]');
+ case 'edgeTooltipsSource': 
+ return JSON.parse('[]');
+ case 'isDirected':
+ return  false; 
+ default: return ''; }; };
+
+}
+	
+		var statGadget = new StatisticsGadget(new LearningLayersuseractivityStatGadget());
+		statGadget.start();
+	}
+	catch(error) {
+		console.log("ERROR: Uncaught Exception occurred: " + error);
+	}
+</script>
+]]></Content>
+</Module>

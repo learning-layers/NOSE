@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+<ModulePrefs 
+    title="Base Profile" 
+    author="K"
+    author_email="K@E-Mail"
+    description="Pick a developer"
+    height="300"
+    width="400"
+    >
+	<Require feature="pubsub"/> 
+	<Require feature="setprefs"/> 
+	<Require feature="dynamic-height"/> 
+	<Require feature="settitle"/> 
+</ModulePrefs>
+<Content type="html"><![CDATA[
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/json2.js" ></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/storage.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/lasAjaxClient.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/query-visualization/JavaScript/openapp.js"></script>
+<!--<script type="text/javascript" src="http://open-app.googlecode.com/files/openapp.js"></script>-->
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script type="text/javascript" src="http://dbis.rwth-aachen.de/gadgets/NOSE/generalGadgets/js/BaseProfile.js"></script>
+
+
+<link rel="stylesheet" href="http://dbis.rwth-aachen.de/gadgets/query-visualization/CSS/statisticsGadget.css">
+
+<div id="descriptionDiv" style="float:left;width:50%;min-height:30px"></div>
+<div id="developer_selection_container" style="float:left;width:50%;min-height:30px;">
+	<select id="developer_select" onChange="dev_change()">
+	</select>
+</div>
+<hr></hr>
+<div id="result_container" style="height:200;">
+	<h3 id="dev_name">Select Developer</h3>
+	<p >Can mainly be seen on
+		<span id="platforms_main" style="color:red"></span>
+		(with <span id="main_number_contributions"></span> contributions)
+	</p>
+	<p><span class="developer_name_span">The Developer</span> is also active on 
+		<span id="platforms_additional" style="color:red"></span>
+		<span id="additional_number_contributions"></span> 
+	</p>
+	<p><span class="developer_name_span">The Developer</span> is usually most active around <span id="active_around" style="color:red"></span></p>
+	</br>
+	<p>Coming soon text analysis</p>
+</div>
+]]></Content>
+</Module>
