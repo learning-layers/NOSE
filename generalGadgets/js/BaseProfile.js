@@ -3,7 +3,7 @@ var lasClient=null;
 var cur_selected_dev;
 var cur_sel_dev_saved_req;
 var cur_sel_dev_saved_mediawiki;
-//Has the format {"ReqBazaar": {"saved":"devR", "display":"dev display"}, "MediaWiki": {"saved":"devL", "display":"dev display"}}
+//has the format [{"display" : "Ralf Klamma", "ReqBazaar":"RalfKlamma", "MediaWiki":"Ralf Klamma"}]
 //So a mapping from what is saved in the database and also matching between req bazaar and mediawiki
 var matched_list_of_devs = [];
 
@@ -40,9 +40,9 @@ function dev_change(){
 		cur_selected_dev = document.getElementById("developer_select").value;
 		// Save the name of the newly selected person
 		for(var i = 0; i < matched_list_of_devs.length; i++) {
-			if(matched_list_of_devs[i].ReqBazaar.display === cur_selected_dev){
-				cur_sel_dev_saved_req = matched_list_of_devs[i].ReqBazaar.saved;
-				cur_sel_dev_saved_mediawiki = matched_list_of_devs[i].MediaWiki.saved;
+			if(matched_list_of_devs[i].display === cur_selected_dev){
+				cur_sel_dev_saved_req = matched_list_of_devs[i].ReqBazaar;
+				cur_sel_dev_saved_mediawiki = matched_list_of_devs[i].MediaWiki;
 				break;
 			}
 		}
@@ -144,7 +144,7 @@ function NOSE_fill_dev_dropdown(){
 				dev = devs_from_mediawiki[i].realname;
 				//If the person is defined then add it to the list
 				if(dev != ""){
-					matched_list_of_devs.push({"ReqBazaar": {"saved":"", "display":dev}, "MediaWiki": {"saved":dev, "display":dev}});
+					matched_list_of_devs.push({"display" : dev.trim(), "ReqBazaar":"", "MediaWiki":dev});
 				}
 			}
 			
@@ -156,64 +156,54 @@ function NOSE_fill_dev_dropdown(){
 			for(var i= 0; i<devs_from_req_baz.data.length;i++){
 				dev_firstname = devs_from_req_baz.data[i][0];
 				dev_lastname = devs_from_req_baz.data[i][1];
+				// not using people with emails as usernames
 				if(dev_firstname != "" && dev_lastname != "" && dev_lastname.indexOf("@") == -1){
 					dev_saved_name.push(dev_lastname);
 					dev_display_name = dev_firstname.concat(dev_lastname);
-					
-					var previous;
-					var first_letter = true;
-					var no_capitals_found = true;
-					for (var j = 0, len = dev_display_name.length; j<len; j++) {
-						previous = 0;
-						if(no_capitals_found == true && j+1 == len){
-							full_dev_list.push(dev_display_name);
-							break;
-						}
-						if (dev_display_name[j] === dev_display_name[j].toUpperCase() && dev_display_name[j] !== dev_display_name[j].toLowerCase()) {
-							if(first_letter){
-								first_letter = false;
-							}else{
-								no_capitals_found = false;
-								var temp = dev_display_name.substring(previous, j).concat(" ");
-								var temp2 = dev_display_name.substring(j,len);
-								full_dev_list.push(temp.concat(temp2));
-								break;
-							}
-						}
-					}
+					full_dev_list.push(dev_display_name);
 				}
 			}
 			
+			// options for the string matching algorithm, https://github.com/krisk/Fuse
+			var options = {
+				caseSensitive: false,
+				includeScore: false,
+				threshold: 0.2,
+				location: 0,
+				distance: 100
+			};
+			var full_dev_list2 = [];
+			for(var j = 0; j<matched_list_of_devs.length; j++){
+				full_dev_list2.push(matched_list_of_devs[j].display);
+			}
+			var fuse = new Fuse(full_dev_list2, options);
 			//Check if there is a match from MediaWiki to Requirements Bazaar
-			var index = -1;
-			for(var i = 0; i<full_dev_list.length; i++){
-				index = -1;
-				for(var j = 0; j<matched_list_of_devs.length; j++){
-					if(matched_list_of_devs[j].MediaWiki.display === full_dev_list[i]){
-						index = j;
-						break;
-					}
-				}
-				if(index !== -1){
-					matched_list_of_devs[index].ReqBazaar.display = full_dev_list[i];
-					matched_list_of_devs[index].ReqBazaar.saved = dev_saved_name[i];
+			var result;
+			
+			for(var j = 0; j<full_dev_list.length; j++){
+				result = fuse.search(full_dev_list[j]);
+				if(result.length !== 0){
+					matched_list_of_devs[result[0]].ReqBazaar = dev_saved_name[j];
 				}else{
-					matched_list_of_devs.push({"ReqBazaar": {"saved":dev_saved_name[i], "display":full_dev_list[i]}, "MediaWiki": {"saved":"", "display":full_dev_list[i]}});
+					matched_list_of_devs.push({"display" : full_dev_list[j], "ReqBazaar":full_dev_list[j], "MediaWiki":""});
 				}
 			}
+			// Sort the list for better searching
+			matched_list_of_devs.sort(function(a,b) { return a.display.localeCompare(b.display) } );
 			
+			//Fill the drop down in the UI
 			var sel = document.getElementById("developer_select");
 			for(var i = 0; i < matched_list_of_devs.length; i++) {
 				var opt = document.createElement('option');
-				opt.innerHTML = matched_list_of_devs[i].ReqBazaar.display;
-				opt.value = matched_list_of_devs[i].ReqBazaar.display;
+				opt.innerHTML = matched_list_of_devs[i].display;
+				opt.value = matched_list_of_devs[i].display;
 				sel.appendChild(opt);
 			}
 			
 			//Set the current developer to the first person
-			cur_selected_dev = matched_list_of_devs[0].MediaWiki.display;
-			cur_sel_dev_saved_req = matched_list_of_devs[0].ReqBazaar.saved;
-			cur_sel_dev_saved_mediawiki = matched_list_of_devs[0].MediaWiki.saved;
+			cur_selected_dev = matched_list_of_devs[0].display;
+			cur_sel_dev_saved_req = matched_list_of_devs[0].ReqBazaar;
+			cur_sel_dev_saved_mediawiki = matched_list_of_devs[0].MediaWiki;
 			
 			NOSE_show_widget_content();
 		});
