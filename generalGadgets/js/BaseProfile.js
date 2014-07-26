@@ -120,93 +120,85 @@ function NOSE_fill_dev_dropdown(){
 	
 	//Get participants from Requirements Bazaar
 	var paramsJSON = new Array();
-	paramsJSON[0] = {"type": "String", "value": "requirementsBazaar"};
-	paramsJSON[1] = {"type": "String", "value": "START n = node(0) MATCH (n)-[:USER]->(m)  RETURN m.firstName as firstname, m.lastName as lastname"};
-	lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-		if(JSON.parse(result.value) == null){
-			devs_from_req_baz=null;
-		}else{
-			devs_from_req_baz = JSON.parse(result.value);
+	lasClient.invoke('nose-monitoring-dashboard', 'getDevelopersFromAllPlatforms',paramsJSON, function(status, result) {
+		if(JSON.parse(result.value) !== null){
+			var JSONbase64encoding = JSON.parse(JSON.parse(result.value).layerswiki).base64;
+			var resultTemp = window.atob(JSONbase64encoding);
+			if(JSON.parse(resultTemp).length !== 0){
+				devs_from_mediawiki = JSON.parse(resultTemp);
+			}
+			if(JSON.parse(result.value).requirementsbazaar.length !== 0){
+				devs_from_req_baz = JSON.parse(JSON.parse(result.value).requirementsbazaar);
+			}
 		}
-		//Get participants from the MediaWiki platform
-		var paramsJSON = new Array();
-		paramsJSON[0] = {"type": "String", "value": "layerswiki"};
-		paramsJSON[1] = {"type": "String", "value": "SELECT DISTINCT cast(user_real_name as char(255)) as realname FROM layerswiki.user WHERE cast(user_real_name as char(255)) <> 'PDF' order by realname;"};
-		lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-			if(JSON.parse(result.value) == null){
-				devs_from_mediawiki=null;
+		
+		var dev;
+		for(var i= 0; i<devs_from_mediawiki.length;i++){
+			dev = devs_from_mediawiki[i].realname;
+			//If the person is defined then add it to the list
+			if(dev != ""){
+				matched_list_of_devs.push({"display" : dev.trim(), "ReqBazaar":"", "MediaWiki":dev});
+			}
+		}
+		
+		// Format the names from Requirements Bazaar
+		var dev_firstname;
+		var dev_lastname;
+		var dev_display_name;
+		var dev_saved_name = [];
+		for(var i= 0; i<devs_from_req_baz.data.length;i++){
+			dev_firstname = devs_from_req_baz.data[i][0];
+			dev_lastname = devs_from_req_baz.data[i][1];
+			// not using people with emails as usernames
+			if(dev_firstname != "" && dev_lastname != "" && dev_lastname.indexOf("@") == -1){
+				dev_saved_name.push(dev_lastname);
+				dev_display_name = dev_firstname.concat(dev_lastname);
+				full_dev_list.push(dev_display_name);
+			}
+		}
+		
+		// options for the string matching algorithm, https://github.com/krisk/Fuse
+		var options = {
+			caseSensitive: false,
+			includeScore: false,
+			threshold: 0.2,
+			location: 0,
+			distance: 100
+		};
+		var full_dev_list2 = [];
+		for(var j = 0; j<matched_list_of_devs.length; j++){
+			full_dev_list2.push(matched_list_of_devs[j].display);
+		}
+		var fuse = new Fuse(full_dev_list2, options);
+		//Check if there is a match from MediaWiki to Requirements Bazaar
+		var result;
+		
+		for(var j = 0; j<full_dev_list.length; j++){
+			result = fuse.search(full_dev_list[j]);
+			if(result.length !== 0){
+				matched_list_of_devs[result[0]].ReqBazaar = dev_saved_name[j];
 			}else{
-				devs_from_mediawiki = JSON.parse(result.value);
+				matched_list_of_devs.push({"display" : full_dev_list[j], "ReqBazaar":full_dev_list[j], "MediaWiki":""});
 			}
-			//add people from MediaWiki to the global managed list
-			var dev;
-			for(var i= 0; i<devs_from_mediawiki.length;i++){
-				dev = devs_from_mediawiki[i].realname;
-				//If the person is defined then add it to the list
-				if(dev != ""){
-					matched_list_of_devs.push({"display" : dev.trim(), "ReqBazaar":"", "MediaWiki":dev});
-				}
-			}
-			
-			// Format the names from Requirements Bazaar
-			var dev_firstname;
-			var dev_lastname;
-			var dev_display_name;
-			var dev_saved_name = [];
-			for(var i= 0; i<devs_from_req_baz.data.length;i++){
-				dev_firstname = devs_from_req_baz.data[i][0];
-				dev_lastname = devs_from_req_baz.data[i][1];
-				// not using people with emails as usernames
-				if(dev_firstname != "" && dev_lastname != "" && dev_lastname.indexOf("@") == -1){
-					dev_saved_name.push(dev_lastname);
-					dev_display_name = dev_firstname.concat(dev_lastname);
-					full_dev_list.push(dev_display_name);
-				}
-			}
-			
-			// options for the string matching algorithm, https://github.com/krisk/Fuse
-			var options = {
-				caseSensitive: false,
-				includeScore: false,
-				threshold: 0.2,
-				location: 0,
-				distance: 100
-			};
-			var full_dev_list2 = [];
-			for(var j = 0; j<matched_list_of_devs.length; j++){
-				full_dev_list2.push(matched_list_of_devs[j].display);
-			}
-			var fuse = new Fuse(full_dev_list2, options);
-			//Check if there is a match from MediaWiki to Requirements Bazaar
-			var result;
-			
-			for(var j = 0; j<full_dev_list.length; j++){
-				result = fuse.search(full_dev_list[j]);
-				if(result.length !== 0){
-					matched_list_of_devs[result[0]].ReqBazaar = dev_saved_name[j];
-				}else{
-					matched_list_of_devs.push({"display" : full_dev_list[j], "ReqBazaar":full_dev_list[j], "MediaWiki":""});
-				}
-			}
-			// Sort the list for better searching
-			matched_list_of_devs.sort(function(a,b) { return a.display.localeCompare(b.display) } );
-			
-			//Fill the drop down in the UI
-			var sel = document.getElementById("developer_select");
-			for(var i = 0; i < matched_list_of_devs.length; i++) {
-				var opt = document.createElement('option');
-				opt.innerHTML = matched_list_of_devs[i].display;
-				opt.value = matched_list_of_devs[i].display;
-				sel.appendChild(opt);
-			}
-			
-			//Set the current developer to the first person
-			cur_selected_dev = matched_list_of_devs[0].display;
-			cur_sel_dev_saved_req = matched_list_of_devs[0].ReqBazaar;
-			cur_sel_dev_saved_mediawiki = matched_list_of_devs[0].MediaWiki;
-			
-			NOSE_show_widget_content();
-		});
+		}
+		// Sort the list for better searching
+		matched_list_of_devs.sort(function(a,b) { return a.display.localeCompare(b.display) } );
+		
+		//Fill the drop down in the UI
+		var sel = document.getElementById("developer_select");
+		for(var i = 0; i < matched_list_of_devs.length; i++) {
+			var opt = document.createElement('option');
+			opt.innerHTML = matched_list_of_devs[i].display;
+			opt.value = matched_list_of_devs[i].display;
+			sel.appendChild(opt);
+		}
+		
+		//Set the current developer to the first person
+		cur_selected_dev = matched_list_of_devs[0].display;
+		cur_sel_dev_saved_req = matched_list_of_devs[0].ReqBazaar;
+		cur_sel_dev_saved_mediawiki = matched_list_of_devs[0].MediaWiki;
+		
+		NOSE_show_widget_content();
 	});
 }
 
@@ -222,51 +214,22 @@ function NOSE_show_widget_content(){
 function NOSE_determine_active_platforms(){
 	var contrib_req_baz = 0;
 	var contrib_mediawiki = 0;
-	
-	if(cur_sel_dev_saved_mediawiki !== ""){
-		//get contributions from mediawiki
-		var paramsJSON = new Array();
-		paramsJSON[0] = {"type": "String", "value": "layerswiki"};
-		paramsJSON[1] = {"type": "String", "value": "SELECT cast(user_real_name as char(255)) as name, user_editcount FROM layerswiki.user WHERE cast(user_real_name as char(255)) LIKE '%"+cur_sel_dev_saved_mediawiki+"%'"};
-		lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-			if(JSON.parse(result.value).length === 0){
-				contrib_mediawiki=0;
-			}else{
-				contrib_mediawiki = JSON.parse(result.value)[0].user_editcount;
+	var paramsJSON = new Array();
+	paramsJSON[0] = {"type": "String", "value": cur_sel_dev_saved_mediawiki};
+	paramsJSON[1] = {"type": "String", "value": cur_sel_dev_saved_req};
+	lasClient.invoke('nose-monitoring-dashboard', 'determineActivePlatforms',paramsJSON, function(status, result) {
+		if(JSON.parse(result.value) !== null){
+			var JSONbase64encoding = JSON.parse(JSON.parse(result.value).layerswiki).base64;
+			var resultTemp = window.atob(JSONbase64encoding);
+			if(JSON.parse(resultTemp).length !== 0){
+				contrib_mediawiki = JSON.parse(resultTemp)[0].user_editcount;
 			}
-			if(cur_sel_dev_saved_req !== ""){
-				//get contributions from requirements bazaar
-				var paramsJSON = new Array();
-				paramsJSON[0] = {"type": "String", "value": "requirementsBazaar"};
-				paramsJSON[1] = {"type": "String", "value": "START n = node(0) MATCH (n)-[:USER]->(m) -[r:INVENTOR_OF | VOTER_ON]->() WHERE m.lastName =~ '.*(?i)"+cur_sel_dev_saved_req+".*'RETURN m.lastName, count(r)"};
-				lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-					if(JSON.parse(result.value).length === 0 || JSON.parse(result.value).data.length === 0){
-						contrib_req_baz=0;
-					}else{
-						contrib_req_baz = JSON.parse(result.value).data[0][1];
-					}
-					NOSE_display_active_platforms(contrib_mediawiki, contrib_req_baz);
-				});
-			}else{
-				contrib_req_baz=0;
-				NOSE_display_active_platforms(contrib_mediawiki, contrib_req_baz);
-			}
-		});
-	}else{
-		contrib_mediawiki=0;
-		//get contributions from requirements bazaar
-		var paramsJSON = new Array();
-		paramsJSON[0] = {"type": "String", "value": "requirementsBazaar"};
-		paramsJSON[1] = {"type": "String", "value": "START n = node(0) MATCH (n)-[:USER]->(m) -[r:INVENTOR_OF | VOTER_ON]->() WHERE m.lastName =~ '.*(?i)"+cur_sel_dev_saved_req+".*'RETURN m.lastName, count(r)"};
-		lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-			if(JSON.parse(result.value).length === 0 || JSON.parse(result.value).data.length === 0){
-				contrib_req_baz=0;
-			}else{
-				contrib_req_baz = JSON.parse(result.value).data[0][1];
+			if(JSON.parse(JSON.parse(result.value).requirementsbazaar).data.length !== 0){
+				contrib_req_baz = JSON.parse(JSON.parse(result.value).requirementsbazaar).data[0][1];;
 			}
 			NOSE_display_active_platforms(contrib_mediawiki, contrib_req_baz);
-		});
-	}
+		}
+	});
 }
 
 /*
@@ -312,14 +275,15 @@ function NOSE_determine_time_active(){
 		$("#active_around").html("could not determine");
 	}else{
 		var paramsJSON = new Array();
-		paramsJSON[0] = {"type": "String", "value": "layerswiki"};
-		paramsJSON[1] = {"type": "String", "value": "select cur.realname, cur.editTimes from (SELECT SUBSTRING(cast(rev.rev_timestamp AS CHAR(255) CHARACTER SET utf8),9,2) as editTimes, cast(user.user_real_name AS CHAR(255) CHARACTER SET utf8) as realname, count(rev.rev_id) as count FROM layerswiki.revision rev, layerswiki.user user where rev.rev_user=user.user_id Group by editTimes, realname Order by realname, editTimes) cur where not exists (select * from (SELECT SUBSTRING(cast(rev.rev_timestamp AS CHAR(255) CHARACTER SET utf8),9,2) as editTimes, cast(user.user_real_name AS CHAR(255) CHARACTER SET utf8) as realname, count(rev.rev_id) as count FROM layerswiki.revision rev, layerswiki.user user where rev.rev_user=user.user_id Group by editTimes, realname Order by realname, editTimes) high where high.realname = cur.realname and high.count > cur.count) and cur.realname ='"+cur_sel_dev_saved_mediawiki+"' group by realname"};
-		lasClient.invoke('nose-monitoring-dashboard', 'executeQuery',paramsJSON, function(status, result) {
-			if(JSON.parse(result.value).length === 0){
+		paramsJSON[0] = {"type": "String", "value": cur_sel_dev_saved_mediawiki};
+		lasClient.invoke('nose-monitoring-dashboard', 'determineTimeActive',paramsJSON, function(status, result) {
+			var JSONbase64encoding = JSON.parse(result.value);
+			var resultTemp = window.atob(JSONbase64encoding.base64);
+			if(JSON.parse(resultTemp).length === 0){
 				$("#active_around").html("could not determine");
 			}else{
 				// Time is returned in format 0-24 which is not so pretty
-				var time = JSON.parse(result.value)[0].editTimes;
+				var time = JSON.parse(resultTemp)[0].editTimes;
 				if(time < 12){
 					$("#active_around").html(time + " AM (UTC)");
 				}else if(time == 12){
